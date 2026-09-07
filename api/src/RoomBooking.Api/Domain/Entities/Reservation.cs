@@ -64,6 +64,17 @@ public class Reservation
     }
 
     /// <summary>
+    /// Records that one occurrence was never booked because it clashed with an existing
+    /// reservation and the user chose to go ahead with the rest of the series.
+    /// </summary>
+    public void SkipOccurrence(DateOnly date) =>
+        Overrides.Add(new OccurrenceOverride
+        {
+            OccurrenceDate = date,
+            Kind = OverrideKind.Skipped,
+        });
+
+    /// <summary>
     /// Expands this reservation into the occurrences it actually stands for, applying
     /// its overrides. A cancelled series expands to nothing.
     /// </summary>

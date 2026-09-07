@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using RoomBooking.Api.Domain.Entities;
 
 namespace RoomBooking.Api.Infrastructure.Repositories;
@@ -32,4 +33,12 @@ public interface IReservationRepository
 
     /// <summary>Stages a new reservation for insert. Nothing is written until it is committed.</summary>
     void Add(Reservation reservation);
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Opens a transaction that takes SQLite's single write lock immediately, rather
+    /// than at the first write.
+    /// </summary>
+    Task<IDbContextTransaction> BeginImmediateTransactionAsync(CancellationToken cancellationToken = default);
 }

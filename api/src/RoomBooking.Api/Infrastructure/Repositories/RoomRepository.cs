@@ -11,4 +11,7 @@ public class RoomRepository(BookingDbContext context) : IRoomRepository
             .AsNoTracking()
             .OrderBy(r => r.Name)
             .ToListAsync(cancellationToken);
+
+    public Task<bool> ExistsAsync(int roomId, CancellationToken cancellationToken = default) =>
+        context.Rooms.AnyAsync(r => r.Id == roomId, cancellationToken);
 }

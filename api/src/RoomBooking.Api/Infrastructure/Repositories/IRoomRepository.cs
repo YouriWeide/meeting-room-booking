@@ -5,4 +5,6 @@ namespace RoomBooking.Api.Infrastructure.Repositories;
 public interface IRoomRepository
 {
     Task<IReadOnlyList<Room>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsAsync(int roomId, CancellationToken cancellationToken = default);
 }

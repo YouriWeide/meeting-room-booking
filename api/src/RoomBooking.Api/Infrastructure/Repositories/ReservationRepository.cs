@@ -1,4 +1,7 @@
+using System.Data;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using RoomBooking.Api.Data;
 using RoomBooking.Api.Domain.Entities;
 
@@ -38,4 +41,24 @@ public class ReservationRepository(BookingDbContext context) : IReservationRepos
     }
 
     public void Add(Reservation reservation) => context.Reservations.Add(reservation);
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+        context.SaveChangesAsync(cancellationToken);
+
+    public async Task<IDbContextTransaction> BeginImmediateTransactionAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var connection = (SqliteConnection)context.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        // deferred: false means BEGIN IMMEDIATE: take the write lock now, not at the
+        // first write. Waiting is too late, because by then both callers have already
+        // read the slot as free. Handing it to EF keeps SaveChangesAsync inside it.
+        var transaction = connection.BeginTransaction(deferred: false);
+        return await context.Database.UseTransactionAsync(transaction, cancellationToken)
+               ?? throw new InvalidOperationException("Could not enlist the SQLite transaction.");
+    }
 }
