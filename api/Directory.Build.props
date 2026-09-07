@@ -1,0 +1,18 @@
+<Project>
+
+  <!--
+    Settings shared by every project in the api/ solution. There is only one
+    project today, but keeping the common knobs here means a second project
+    (a test project, most likely) inherits them for free.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Apply the .editorconfig code style rules during build, not just in the IDE. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+
+</Project>

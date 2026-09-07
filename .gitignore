@@ -427,3 +427,14 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# macOS / Windows filesystem cruft
+# The GitHub VisualStudio template assumes a Windows box; this repo is built on
+# macOS, so the OS junk files it omits are ignored here explicitly rather than
+# relying on a contributor's global gitignore.
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
