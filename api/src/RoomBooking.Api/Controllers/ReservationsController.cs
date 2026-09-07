@@ -1,5 +1,5 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using RoomBooking.Api.Domain.Exceptions;
 using RoomBooking.Api.Dtos;
 using RoomBooking.Api.Services;
 
@@ -18,46 +18,41 @@ public class ReservationsController(IReservationService reservationService) : Co
         CreateReservationRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var reservation = await reservationService.CreateAsync(request, cancellationToken);
+        var reservation = await reservationService.CreateAsync(request, cancellationToken);
 
-            return Created((string?)null, reservation);
-        }
-        catch (RoomNotFoundException exception)
-        {
-            ModelState.AddModelError(nameof(request.RoomId), exception.Message);
-            return ValidationProblem(ModelState);
-        }
-        catch (ConflictException exception)
-        {
-            return Conflict(BuildConflictProblem(exception));
-        }
+        return Created((string?)null, reservation);
     }
 
-    private static ProblemDetails BuildConflictProblem(ConflictException exception)
+    /// <summary>Cancels a whole series, or a single booking.</summary>
+    /// <param name="bookedBy">
+    /// The name it was booked under.
+    /// </param>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelSeries(
+        int id,
+        [FromQuery][Required] string bookedBy,
+        CancellationToken cancellationToken)
     {
-        var problem = new ProblemDetails
-        {
-            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.10",
-            Title = "The room is already booked for part of this request.",
-            Status = StatusCodes.Status409Conflict,
-            Detail = $"{exception.Conflicts.Count} of the requested slots are taken. "
-                     + "Send skipConflicts=true to book the remaining weeks, or choose another time.",
-        };
+        await reservationService.CancelSeriesAsync(id, bookedBy, cancellationToken);
+        return NoContent();
+    }
 
-        problem.Extensions["conflicts"] = exception.Conflicts
-            .Select(c => new ConflictDto(
-                c.Requested.Date,
-                c.Requested.Start,
-                c.Requested.End,
-                new BlockingBookingDto(
-                    c.ExistingOccurrence.ReservationId,
-                    c.ExistingOccurrence.BookedBy,
-                    c.ExistingOccurrence.Start,
-                    c.ExistingOccurrence.End)))
-            .ToList();
-
-        return problem;
+    /// <summary>Cancels one occurrence and leaves the rest of the series untouched.</summary>
+    /// <param name="occurrenceDate">Which occurrence, as yyyy-MM-dd.</param>
+    [HttpDelete("{id:int}/occurrences/{occurrenceDate}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelOccurrence(
+        int id,
+        DateOnly occurrenceDate,
+        [FromQuery][Required] string bookedBy,
+        CancellationToken cancellationToken)
+    {
+        await reservationService.CancelOccurrenceAsync(id, occurrenceDate, bookedBy, cancellationToken);
+        return NoContent();
     }
 }

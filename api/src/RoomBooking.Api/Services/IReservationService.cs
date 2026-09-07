@@ -15,4 +15,19 @@ public interface IReservationService
     Task<ReservationDto> CreateAsync(
         CreateReservationRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Cancels a whole series, or a single booking.</summary>
+    Task CancelSeriesAsync(
+        int reservationId,
+        string bookedBy,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cancels one occurrence and leaves the rest of the series untouched.
+    /// </summary>
+    Task CancelOccurrenceAsync(
+        int reservationId,
+        DateOnly occurrenceDate,
+        string bookedBy,
+        CancellationToken cancellationToken = default);
 }

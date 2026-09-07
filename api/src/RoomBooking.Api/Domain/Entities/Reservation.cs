@@ -39,7 +39,7 @@ public class Reservation
     public DateOnly LastDate { get; private set; }
 
     /// <summary>Whether the whole series has been cancelled.</summary>
-    public bool IsCancelled { get; set; }
+    public bool IsCancelled { get; private set; }
 
     /// <summary>
     /// Audit timestamp, in UTC.
@@ -61,6 +61,39 @@ public class Reservation
         EndTime = rule.EndTime;
         OccurrenceCount = rule.OccurrenceCount;
         LastDate = rule.LastDate;
+    }
+
+    /// <summary>Cancels the whole series. Expansion then yields nothing.</summary>
+    public void Cancel() => IsCancelled = true;
+
+    /// <summary>Whether the rule actually generates an occurrence on this date.</summary>
+    public bool HasOccurrenceOn(DateOnly date) => Recurrence.Dates().Contains(date);
+
+    /// <summary>
+    /// Cancels one occurrence, leaving the rest of the series exactly as it was.
+    /// </summary>
+    /// <remarks>
+    /// If the occurrence had been moved, the move is replaced rather than kept beside a
+    /// cancellation: one date carries at most one override, which the unique index on
+    /// (ReservationId, OccurrenceDate) enforces.
+    /// </remarks>
+    public void CancelOccurrence(DateOnly date)
+    {
+        var existing = Overrides.FirstOrDefault(o => o.OccurrenceDate == date);
+
+        if (existing is null)
+        {
+            Overrides.Add(new OccurrenceOverride
+            {
+                OccurrenceDate = date,
+                Kind = OverrideKind.Cancelled,
+            });
+            return;
+        }
+
+        existing.Kind = OverrideKind.Cancelled;
+        existing.OverrideStartTime = null;
+        existing.OverrideEndTime = null;
     }
 
     /// <summary>

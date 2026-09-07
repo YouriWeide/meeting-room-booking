@@ -66,6 +66,56 @@ public class ReservationService(IReservationRepository reservations, IRoomReposi
         return ToDto(reservation);
     }
 
+    public async Task CancelSeriesAsync(
+        int reservationId,
+        string bookedBy,
+        CancellationToken cancellationToken = default)
+    {
+        var reservation = await LoadOwnedAsync(reservationId, bookedBy, cancellationToken);
+
+        // No transaction: this sets one flag, and setting it twice is the same as
+        // setting it once. Nothing is read and then acted on, so there is no race to
+        // lose - unlike creating, where the check and the insert must be indivisible.
+        reservation.Cancel();
+        await reservations.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task CancelOccurrenceAsync(
+        int reservationId,
+        DateOnly occurrenceDate,
+        string bookedBy,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await reservations.BeginImmediateTransactionAsync(cancellationToken);
+
+        var reservation = await LoadOwnedAsync(reservationId, bookedBy, cancellationToken);
+
+        if (!reservation.HasOccurrenceOn(occurrenceDate))
+        {
+            throw ReservationNotFoundException.Occurrence(reservationId, occurrenceDate);
+        }
+
+        reservation.CancelOccurrence(occurrenceDate);
+        await reservations.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    private async Task<Reservation> LoadOwnedAsync(
+        int reservationId,
+        string bookedBy,
+        CancellationToken cancellationToken)
+    {
+        var reservation = await reservations.GetByIdAsync(reservationId, cancellationToken)
+                          ?? throw ReservationNotFoundException.Reservation(reservationId);
+
+        if (!string.Equals(reservation.BookedBy, bookedBy.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new NotReservationOwnerException(reservationId);
+        }
+
+        return reservation;
+    }
+
     /// <summary>
     /// Which of the requested slots are already taken, and by what.
     /// </summary>

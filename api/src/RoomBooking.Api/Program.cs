@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Api.Data;
+using RoomBooking.Api.Infrastructure;
 using RoomBooking.Api.Infrastructure.Repositories;
 using RoomBooking.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 builder.Services.AddSwaggerGen();
 
@@ -20,6 +24,8 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
