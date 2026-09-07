@@ -438,3 +438,8 @@ FodyWeavers.xsd
 ._*
 Thumbs.db
 ehthumbs.db
+
+# SQLite database files — created at runtime, never committed
+*.db
+*.db-shm
+*.db-wal
