@@ -4,11 +4,7 @@
     "secure": false,
     "logLevel": "debug"
   },
-  "/openapi": {
-    "target": "http://localhost:5161",
-    "secure": false
-  },
-  "/scalar": {
+  "/swagger": {
     "target": "http://localhost:5161",
     "secure": false
   }
