@@ -1,26 +1,9 @@
-@use '@angular/material' as mat;
+// Bootstrap, matching Rocksoft.Portal's choice of ng-bootstrap over a component library
+// with its own design language. Imported as Sass rather than as a prebuilt stylesheet so
+// the theme can be adjusted through variables if it ever needs to be.
+@use 'bootstrap/scss/bootstrap' as *;
 
-html {
-  height: 100%;
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
-      ),
-      typography: Roboto,
-      density: 0,
-    )
-  );
-}
-
+html,
 body {
-  color-scheme: light;
-
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  margin: 0;
   height: 100%;
 }

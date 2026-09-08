@@ -1,1 +1,5 @@
+@if (userName(); as name) {
+  <app-header [userName]="name" (switchUser)="switchUser()" />
+}
+
 <router-outlet />

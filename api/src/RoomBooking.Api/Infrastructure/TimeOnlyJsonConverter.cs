@@ -7,7 +7,10 @@ namespace RoomBooking.Api.Infrastructure;
 /// <summary>
 /// Reads times as either "09:00" or "09:00:00"; always writes "09:00:00".
 /// </summary>
-
+/// <remarks>
+/// "HH:mm" is what browsers, native time inputs and anyone typing into Swagger produce,
+/// so the contract accepts it.
+/// </remarks>
 public sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
 {
     private static readonly string[] AcceptedFormats = ["HH:mm", "HH:mm:ss"];

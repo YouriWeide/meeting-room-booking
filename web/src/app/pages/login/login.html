@@ -1,0 +1,39 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+      <div class="card">
+        <div class="card-body">
+          <h1 class="card-title h4">Wie ben je?</h1>
+          <p class="card-subtitle text-body-secondary mb-4">
+            Geen wachtwoord, geen account — je naam komt bij je reserveringen te staan.
+          </p>
+
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="mb-3">
+              <label for="name" class="form-label">Naam</label>
+              <input
+                id="name"
+                type="text"
+                class="form-control"
+                [class.is-invalid]="name.touched && name.invalid"
+                formControlName="name"
+                autocomplete="name"
+                autofocus
+              />
+              @if (name.touched && name.hasError('required')) {
+                <div class="invalid-feedback">Vul je naam in.</div>
+              }
+              @if (name.hasError('maxlength')) {
+                <div class="invalid-feedback">Maximaal 100 tekens.</div>
+              }
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Doorgaan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
