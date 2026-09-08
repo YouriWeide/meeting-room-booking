@@ -4,10 +4,12 @@ namespace RoomBooking.Api.Dtos;
 /// One booked slot on one day.
 /// </summary>
 /// <remarks>
+
 public sealed record OccurrenceDto(
     int ReservationId,
     int RoomId,
     DateOnly Date,
     TimeOnly Start,
     TimeOnly End,
-    string BookedBy);
+    string BookedBy,
+    int SeriesOccurrences);

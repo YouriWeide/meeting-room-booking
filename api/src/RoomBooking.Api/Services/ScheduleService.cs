@@ -11,20 +11,34 @@ public class ScheduleService(IReservationRepository reservations) : IScheduleSer
         int? roomId = null,
         CancellationToken cancellationToken = default)
     {
-        var candidates = await reservations.GetInRangeAsync(rangeStart, rangeEnd, roomId, cancellationToken: cancellationToken);
+        var candidates = await reservations.GetInRangeAsync(
+            rangeStart, rangeEnd, roomId, cancellationToken: cancellationToken);
 
         return
         [
             .. candidates
-                .SelectMany(r => r.Expand())
-                // The repository matched whole reservations whose span touches the range,
-                // so a ten-week series shows up here with all ten of its occurrences even
-                // when only one falls inside the week being viewed.
-                .Where(o => o.Date >= rangeStart && o.Date <= rangeEnd)
+                .SelectMany(reservation => Visible(reservation, rangeStart, rangeEnd))
                 .OrderBy(o => o.Date)
                 .ThenBy(o => o.Start)
-                .ThenBy(o => o.RoomId)
-                .Select(o => new OccurrenceDto(o.ReservationId, o.RoomId, o.Date, o.Start, o.End, o.BookedBy)),
+                .ThenBy(o => o.RoomId),
         ];
+    }
+
+    private static IEnumerable<OccurrenceDto> Visible(
+        Domain.Entities.Reservation reservation,
+        DateOnly rangeStart,
+        DateOnly rangeEnd)
+    {
+        // Expanded once and kept, because the two uses need different things from it:
+        // the count describes the whole series, while the rows describe the range.
+        var all = reservation.Expand().ToList();
+
+        // The repository matched whole reservations whose span touches the range, so a
+        // ten-week series arrives with all ten occurrences even when only one falls in
+        // the week being viewed. Without this filter the grid would show the other nine.
+        return all
+            .Where(o => o.Date >= rangeStart && o.Date <= rangeEnd)
+            .Select(o => new OccurrenceDto(
+                o.ReservationId, o.RoomId, o.Date, o.Start, o.End, o.BookedBy, all.Count));
     }
 }

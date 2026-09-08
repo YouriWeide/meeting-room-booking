@@ -141,8 +141,16 @@ public class ReservationService(IReservationRepository reservations, IRoomReposi
         ];
     }
 
-    private static ReservationDto ToDto(Reservation reservation) =>
-        new(
+    private static ReservationDto ToDto(Reservation reservation)
+    {
+        var expanded = reservation.Expand().ToList();
+        IReadOnlyList<OccurrenceDto> occurrences =
+        [
+            .. expanded.Select(o => new OccurrenceDto(
+                o.ReservationId, o.RoomId, o.Date, o.Start, o.End, o.BookedBy, expanded.Count)),
+        ];
+
+        return new ReservationDto(
             reservation.Id,
             reservation.RoomId,
             reservation.BookedBy,
@@ -151,10 +159,10 @@ public class ReservationService(IReservationRepository reservations, IRoomReposi
             reservation.StartTime,
             reservation.EndTime,
             reservation.OccurrenceCount,
-            [.. reservation.Expand().Select(o =>
-                new OccurrenceDto(o.ReservationId, o.RoomId, o.Date, o.Start, o.End, o.BookedBy))],
+            occurrences,
             [.. reservation.Overrides
                 .Where(o => o.Kind == OverrideKind.Skipped)
                 .Select(o => o.OccurrenceDate)
                 .Order()]);
+    }
 }
