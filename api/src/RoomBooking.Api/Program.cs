@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Api.Data;
 using RoomBooking.Api.Infrastructure;
@@ -13,7 +14,13 @@ builder.Services.AddControllers()
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var documentation = Path.Combine(
+        AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+
+    options.IncludeXmlComments(documentation);
+});
 
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("BookingDb")));

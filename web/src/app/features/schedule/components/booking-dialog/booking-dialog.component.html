@@ -41,16 +41,34 @@
 
     <div class="mb-3">
       <label for="roomId" class="form-label">Ruimte</label>
-      <select id="roomId" class="form-select" formControlName="roomId">
+      <select
+        id="roomId"
+        class="form-select"
+        [class.is-invalid]="fieldErrors().roomId"
+        formControlName="roomId"
+      >
         @for (room of rooms(); track room.id) {
           <option [ngValue]="room.id">{{ room.name }} ({{ room.capacity }} personen)</option>
         }
       </select>
+      @if (fieldErrors().roomId) {
+        <div class="invalid-feedback">Kies een ruimte.</div>
+      }
     </div>
 
     <div class="mb-3">
       <label for="date" class="form-label">Datum</label>
-      <input id="date" type="date" class="form-control" [min]="minDate" formControlName="date" />
+      <input
+        id="date"
+        type="date"
+        class="form-control"
+        [class.is-invalid]="fieldErrors().date"
+        [min]="minDate"
+        formControlName="date"
+      />
+      @if (fieldErrors().date) {
+        <div class="invalid-feedback">Kies een datum.</div>
+      }
     </div>
 
     <div class="row g-3 mb-3">
@@ -92,7 +110,18 @@
     @if (form.controls.repeatWeekly.value) {
       <div class="mb-1">
         <label for="weeks" class="form-label">Aantal weken</label>
-        <input id="weeks" type="number" class="form-control" min="2" max="52" formControlName="weeks" />
+        <input
+          id="weeks"
+          type="number"
+          class="form-control"
+          [class.is-invalid]="fieldErrors().weeks"
+          min="2"
+          max="52"
+          formControlName="weeks"
+        />
+        @if (fieldErrors().weeks) {
+          <div class="invalid-feedback">Vul een aantal weken in vanaf 2.</div>
+        }
       </div>
     }
   </div>

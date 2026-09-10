@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { EMPTY, Subject, catchError, switchMap, tap } from 'rxjs';
 
 import { BookingApi, asConflictProblem } from '../../features/schedule/api/booking-api';
 import {
@@ -50,7 +52,36 @@ export class ScheduleContainerComponent {
   readonly loading = signal(false);
   readonly loadError = signal<string | null>(null);
 
+  /** Fires whenever the schedule on screen has to be fetched again. */
+  private readonly reload = new Subject<void>();
+
   constructor() {
+    this.reload
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.loadError.set(null);
+        }),
+        switchMap(() => {
+          const from = this.weekStart();
+
+          return this.api.getSchedule(from, addDays(from, DaysInWeek - 1)).pipe(
+            catchError((error: unknown) => {
+              this.loadError.set(describe(error));
+              this.loading.set(false);
+
+              // The week that was on screen stays on screen, with the error above it.
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((occurrences) => {
+        this.occurrences.set(occurrences);
+        this.loading.set(false);
+      });
+
     this.loadRooms();
     this.loadSchedule();
   }
@@ -162,22 +193,7 @@ export class ScheduleContainerComponent {
   }
 
   private loadSchedule(): void {
-    this.loading.set(true);
-    this.loadError.set(null);
-
-    const from = this.weekStart();
-    const to = addDays(from, DaysInWeek - 1);
-
-    this.api.getSchedule(from, to).subscribe({
-      next: (occurrences) => {
-        this.occurrences.set(occurrences);
-        this.loading.set(false);
-      },
-      error: (error: unknown) => {
-        this.loadError.set(describe(error));
-        this.loading.set(false);
-      },
-    });
+    this.reload.next();
   }
 }
 

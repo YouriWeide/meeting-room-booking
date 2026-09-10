@@ -35,10 +35,6 @@ SQLite laat maar één schrijver tegelijk toe en is een garantie die hier nodig 
 De belangrijkste reden dat ik voor SQLite heb gekozen is dat de zekerheid komt uit de
 database zelf en niet uit code die iemand later per ongeluk kan overslaan.
 
-Ik heb dit getest door twee identieke boekingen tegelijk af te vuren, tien keer achter
-elkaar. Steeds slaagt er precies één en krijgt de ander een conflictmelding. In de
-database staat daarna ook echt maar één reservering per tijdslot.
-
 Wat ik heb overwogen en niet heb gedaan:
 
 Een slot in de applicatie zelf. Dat werkt prima zolang er één kopie van de API draait, en
@@ -96,8 +92,7 @@ teruggaat. Sla je een tijdstip op als moment in de tijd, dan verschuift de hele 
 uur zodra je die grens passeert.
 
 Daarom bewaar ik datum en tijd los van elkaar, zonder tijdzone, precies zoals iemand ze
-intikt. Ook in de frontend blijven het gewoon teksten en worden ze nooit omgezet naar een
-datumobject, want dat is precies waar zo'n verschuiving ontstaat.
+intikt. Ook in de frontend blijven het teksten.
 
 Het enige tijdstip dat wél een echt moment is, is het moment waarop een reservering
 gemaakt werd. Dat is namelijk iets wat gebeurd is, geen afspraak die nog moet komen.
@@ -141,8 +136,7 @@ Er zijn meerdere onderdelen die profijt zouden hebben van unit tests:
 - Dat de rest van een reeks blijft staan als je er één uit annuleert.
 - Dat er bij het bevestigen van een gedeeltelijk conflict opnieuw gecontroleerd wordt.
 - Dat je de reservering van iemand anders niet kunt annuleren.
-- De validatie: eindtijd na starttijd, geen datum in het verleden, en het aantal weken
-  binnen de grenzen.
+- De validatie: eindtijd na starttijd, geen datum in het verleden en het aantal weken binnen de grenzen.
 
 ## Wat ik zou doen met meer tijd
 
@@ -151,3 +145,6 @@ Een afspraak kunnen wijzigen of verplaatsen.
 Echte authenticatie en authorisatie.
 
 Een database server met migraties in plaats van de database bij het opstarten aanmaken.
+
+Nette foutmeldingen. De API antwoordt nu met Engelse, technische teksten en de frontend zet die ongefilterd op het scherm. Die zouden
+Nederlands en begrijpelijk moeten zijn.

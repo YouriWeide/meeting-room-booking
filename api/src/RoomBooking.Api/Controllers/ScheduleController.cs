@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using RoomBooking.Api.Dtos;
 using RoomBooking.Api.Services;
 
@@ -18,8 +19,8 @@ public class ScheduleController(IScheduleService scheduleService) : ControllerBa
     [ProducesResponseType<IReadOnlyList<OccurrenceDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IReadOnlyList<OccurrenceDto>>> GetSchedule(
-        [FromQuery] DateOnly from,
-        [FromQuery] DateOnly to,
+        [FromQuery][BindRequired] DateOnly from,
+        [FromQuery][BindRequired] DateOnly to,
         [FromQuery] int? roomId,
         CancellationToken cancellationToken)
     {

@@ -44,9 +44,17 @@ public sealed class CreateReservationRequest : IValidatableObject
                 "endTime must be later than startTime.", [nameof(EndTime)]);
         }
 
-        if (Date < DateOnly.FromDateTime(DateTime.Now))
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
+
+        if (Date < today)
         {
             yield return new ValidationResult("date must not be in the past.", [nameof(Date)]);
+        }
+        else if (Date == today && StartTime < TimeOnly.FromDateTime(now))
+        {
+            yield return new ValidationResult(
+                "startTime must not be in the past.", [nameof(StartTime)]);
         }
     }
 }

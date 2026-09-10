@@ -6,6 +6,8 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { formatDayLabel, shortTime, today } from '../../date-utils';
 import type { Conflict, CreateReservationRequest, IsoDate, Room } from '../../models/booking';
 
+const DefaultWeeks = 2;
+
 /**
  * Books a room for a slot, once or every week for a number of weeks.
  */
@@ -39,7 +41,7 @@ export class BookingDialogComponent {
     startTime: new FormControl('09:00', { nonNullable: true, validators: [Validators.required] }),
     endTime: new FormControl('10:00', { nonNullable: true, validators: [Validators.required] }),
     repeatWeekly: new FormControl(false, { nonNullable: true }),
-    weeks: new FormControl(2, {
+    weeks: new FormControl(DefaultWeeks, {
       nonNullable: true,
       validators: [Validators.required, Validators.min(2), Validators.max(52)],
     }),
@@ -53,6 +55,28 @@ export class BookingDialogComponent {
    */
   private readonly formValue = signal(this.form.getRawValue());
 
+  /**
+   * Whether a submit has been refused for being incomplete. Until then a field the user
+   * has not reached yet is not marked wrong.
+   */
+  private readonly submitRefused = signal(false);
+
+  /**
+   * Which fields to mark red.
+   */
+  readonly fieldErrors = computed(() => {
+    this.formValue();
+
+    const show = this.submitRefused();
+    const controls = this.form.controls;
+
+    return {
+      roomId: show && controls.roomId.invalid,
+      date: show && controls.date.invalid,
+      weeks: show && controls.weeks.invalid,
+    };
+  });
+
   readonly invalidTimes = computed(() => {
     const { startTime, endTime } = this.formValue();
     return startTime !== '' && endTime !== '' && endTime <= startTime;
@@ -64,9 +88,7 @@ export class BookingDialogComponent {
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.formValue.set(this.form.getRawValue());
 
-      // A conflict describes one specific request. The moment any field changes it is
-      // about something the user is no longer asking for, so it goes - which also
-      // re-enables Reserveren for the new values.
+
       if (this.conflicts().length > 0) {
         this.conflicts.set([]);
       }
@@ -75,6 +97,31 @@ export class BookingDialogComponent {
         this.errorMessage.set(null);
       }
     });
+
+    this.form.controls.repeatWeekly.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((repeatWeekly) => this.syncWeeks(repeatWeekly));
+
+    this.syncWeeks(this.form.controls.repeatWeekly.value);
+  }
+
+  /**
+   * Keeps the weeks field out of the way when the series checkbox is off.
+   */
+  private syncWeeks(repeatWeekly: boolean): void {
+    const weeks = this.form.controls.weeks;
+
+    if (repeatWeekly) {
+      weeks.enable({ emitEvent: false });
+      return;
+    }
+
+    // Only a rejected value is thrown away.
+    if (weeks.invalid) {
+      weeks.setValue(DefaultWeeks, { emitEvent: false });
+    }
+
+    weeks.disable({ emitEvent: false });
   }
 
   /**
@@ -120,9 +167,12 @@ export class BookingDialogComponent {
 
   submit(skipConflicts = false): void {
     if (this.form.invalid || this.invalidTimes()) {
+      this.submitRefused.set(true);
       this.form.markAllAsTouched();
       return;
     }
+
+    this.submitRefused.set(false);
 
     const value = this.form.getRawValue();
     this.requestedSlots.set(value.repeatWeekly ? value.weeks : 1);
