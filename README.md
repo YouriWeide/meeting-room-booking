@@ -142,7 +142,7 @@ Er zijn meerdere onderdelen die profijt zouden hebben van unit tests:
 
 Een afspraak kunnen wijzigen of verplaatsen.
 
-Echte authenticatie en authorisatie.
+Echte authenticatie en autorisatie.
 
 Een database server met migraties in plaats van de database bij het opstarten aanmaken.
 
