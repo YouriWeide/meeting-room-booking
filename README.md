@@ -146,5 +146,5 @@ Echte authenticatie en autorisatie.
 
 Een database server met migraties in plaats van de database bij het opstarten aanmaken.
 
-Nette foutmeldingen. De API antwoordt nu met Engelse, technische teksten en de frontend zet die ongefilterd op het scherm. Die zouden
-Nederlands en begrijpelijk moeten zijn.
+Nette foutmeldingen. De API antwoordt nu met Engelse, technische teksten omdat ik daarmee begon en gewend ben. Die zouden
+Nederlands en begrijpelijk moeten zijn aangezien ik de UI in het nederlands heb opgezet. 
