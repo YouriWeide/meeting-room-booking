@@ -6,14 +6,14 @@ import type { IsoDate } from './models/booking';
 
 const DaysInWeek = 7;
 
-export function toIsoDate(date: Date): IsoDate {
+function toIsoDate(date: Date): IsoDate {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
 /** Local midnight on the given day, so no timezone conversion can happen. */
-export function fromIsoDate(value: IsoDate): Date {
+function fromIsoDate(value: IsoDate): Date {
   const [year, month, day] = value.split('-').map(Number);
   return new Date(year, month - 1, day);
 }

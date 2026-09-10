@@ -8,9 +8,9 @@ elke week. Backend in .NET, frontend in Angular, database in SQLite.
 Twee terminals, verder niets.
 
 ```
-dotnet run --project api/src/RoomBooking.Api    # API op http://localhost:5161
-npm --prefix web install                        # alleen de eerste keer
-npm --prefix web start                          # app op http://localhost:4200
+npm run web:install    # alleen de eerste keer
+npm run api            # API op http://localhost:5161
+npm run web            # app op http://localhost:4200
 ```
 
 Ga daarna naar http://localhost:4200 en vul een naam in. Je hebt de .NET SDK 8.0.400 of
@@ -135,9 +135,14 @@ per ruimte in één oogopslag wat er die week gepland staat.
 
 Er zijn meerdere onderdelen die profijt zouden hebben van unit tests:
 
-- De check dat afspraken niet kunnnen overlappen
-- De race condition bij het opslaan van twee boekingen op hetzelfde moment
-- Het expanden van de occurences bij een reeks
+- De check dat afspraken niet kunnen overlappen.
+- De race condition bij het opslaan van twee boekingen op hetzelfde moment.
+- Het expanden van de occurrences bij een reeks.
+- Dat de rest van een reeks blijft staan als je er één uit annuleert.
+- Dat er bij het bevestigen van een gedeeltelijk conflict opnieuw gecontroleerd wordt.
+- Dat je de reservering van iemand anders niet kunt annuleren.
+- De validatie: eindtijd na starttijd, geen datum in het verleden, en het aantal weken
+  binnen de grenzen.
 
 ## Wat ik zou doen met meer tijd
 

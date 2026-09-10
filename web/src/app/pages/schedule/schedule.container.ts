@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { forkJoin } from 'rxjs';
 
 import { BookingApi, asConflictProblem } from '../../features/schedule/api/booking-api';
 import {
@@ -16,7 +15,6 @@ import {
 } from '../../features/schedule/components/cancel-dialog/cancel-dialog.component';
 import { WeekGridComponent, type SlotSelection } from '../../features/schedule/components/week-grid/week-grid.component';
 import type {
-  Conflict,
   CreateReservationRequest,
   IsoDate,
   Occurrence,
@@ -29,9 +27,9 @@ const DaysInWeek = 7;
 /**
  * The week overview, and where booking starts.
  *
- * The container: it holds which week is shown, fetches rooms and occurrences, and runs
- * the booking request. The grid and the dialog below it receive plain data and report
- * intent, so neither of them knows the API exists.
+ * The container: it holds which week is shown, fetches the data, and performs every
+ * request. The grid and the two dialogs it opens receive plain data and report what the
+ * user did, so none of them knows the API exists.
  */
 @Component({
   selector: 'app-schedule',
@@ -53,34 +51,38 @@ export class ScheduleContainerComponent {
   readonly loadError = signal<string | null>(null);
 
   constructor() {
-    this.load();
+    this.loadRooms();
+    this.loadSchedule();
   }
 
-  weekLabel(): string {
-    return formatWeekLabel(this.weekStart());
+  /** The week on screen may already be in the past; the API refuses past dates. */
+  private firstBookableDate(): IsoDate {
+    const start = this.weekStart();
+    return start < today() ? today() : start;
   }
+
+  readonly weekLabel = computed(() => formatWeekLabel(this.weekStart()));
 
   showWeek(offsetInWeeks: number): void {
     this.weekStart.update((current) => addDays(current, offsetInWeeks * DaysInWeek));
-    this.load();
+    this.loadSchedule();
   }
 
   showThisWeek(): void {
     this.weekStart.set(startOfWeek(today()));
-    this.load();
+    this.loadSchedule();
   }
 
   openBooking(slot?: SlotSelection): void {
     const dialog = this.modal.open(BookingDialogComponent, { size: 'lg' });
     const form = dialog.componentInstance as BookingDialogComponent;
 
-    form.rooms.set(this.rooms());
-    form.bookedBy.set(this.userName() ?? '');
-    form.defaultRoomId.set(slot?.roomId ?? null);
-    // The week on screen may have started before today; booking the past is refused
-    // by the API, so the form should never open already invalid.
-    const start = this.weekStart();
-    form.defaultDate.set(slot?.date ?? (start < today() ? today() : start));
+    form.prefill({
+      rooms: this.rooms(),
+      bookedBy: this.userName() ?? '',
+      roomId: slot?.roomId ?? null,
+      date: slot?.date ?? this.firstBookableDate(),
+    });
 
     form.submitted.subscribe((request) => this.book(dialog, form, request));
   }
@@ -96,7 +98,7 @@ export class ScheduleContainerComponent {
     this.api.createReservation(request).subscribe({
       next: () => {
         dialog.close();
-        this.load();
+        this.loadSchedule();
       },
       error: (error: unknown) => {
         form.busy.set(false);
@@ -104,7 +106,7 @@ export class ScheduleContainerComponent {
         const conflict = asConflictProblem(error);
 
         if (conflict) {
-          form.conflicts.set(conflict.conflicts as readonly Conflict[]);
+          form.conflicts.set(conflict.conflicts);
           return;
         }
 
@@ -140,7 +142,7 @@ export class ScheduleContainerComponent {
         : this.api.cancelOccurrence(occurrence.reservationId, occurrence.date, bookedBy);
 
     request.subscribe({
-      next: () => this.load(),
+      next: () => this.loadSchedule(),
       error: (error: unknown) => this.loadError.set(describe(error)),
     });
   }
@@ -149,19 +151,25 @@ export class ScheduleContainerComponent {
     return this.rooms().find((room) => room.id === roomId)?.name ?? '';
   }
 
-  private load(): void {
+  /**
+   * Fetched once. The rooms are seeded and do not change while the app is open.
+   */
+  private loadRooms(): void {
+    this.api.getRooms().subscribe({
+      next: (rooms) => this.rooms.set(rooms),
+      error: (error: unknown) => this.loadError.set(describe(error)),
+    });
+  }
+
+  private loadSchedule(): void {
     this.loading.set(true);
     this.loadError.set(null);
 
     const from = this.weekStart();
     const to = addDays(from, DaysInWeek - 1);
 
-    forkJoin({
-      rooms: this.api.getRooms(),
-      occurrences: this.api.getSchedule(from, to),
-    }).subscribe({
-      next: ({ rooms, occurrences }) => {
-        this.rooms.set(rooms);
+    this.api.getSchedule(from, to).subscribe({
+      next: (occurrences) => {
         this.occurrences.set(occurrences);
         this.loading.set(false);
       },

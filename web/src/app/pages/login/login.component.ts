@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CurrentUserService } from '../../shared/current-user';
 
 /**
- * Asks who you are. Container: it owns the service and the navigation.
+ * Asks who you are, and remembers it.
  */
 @Component({
   selector: 'app-login',

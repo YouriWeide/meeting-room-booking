@@ -4,7 +4,7 @@
       <tr>
         <th scope="col" class="text-nowrap">Ruimte</th>
         @for (day of days(); track day) {
-          <th scope="col" class="text-nowrap" [class.table-primary]="day === todayIso">
+          <th scope="col" class="text-nowrap" [class.table-primary]="isToday(day)">
             {{ formatDayLabel(day) }}
           </th>
         }
@@ -50,7 +50,7 @@
                 </div>
               }
 
-              @if (day >= todayIso) {
+              @if (isBookable(day)) {
                 <button
                   type="button"
                   class="btn btn-sm btn-outline-secondary w-100"

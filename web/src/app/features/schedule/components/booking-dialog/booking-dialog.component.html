@@ -60,7 +60,7 @@
           id="startTime"
           type="time"
           class="form-control"
-          [class.is-invalid]="invalidTimes"
+          [class.is-invalid]="invalidTimes()"
           formControlName="startTime"
         />
       </div>
@@ -70,10 +70,10 @@
           id="endTime"
           type="time"
           class="form-control"
-          [class.is-invalid]="invalidTimes"
+          [class.is-invalid]="invalidTimes()"
           formControlName="endTime"
         />
-        @if (invalidTimes) {
+        @if (invalidTimes()) {
           <div class="invalid-feedback">De eindtijd moet na de starttijd liggen.</div>
         }
       </div>

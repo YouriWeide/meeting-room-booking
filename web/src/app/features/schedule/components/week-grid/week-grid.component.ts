@@ -33,7 +33,13 @@ export class WeekGridComponent {
 
   readonly days = computed(() => weekDays(this.weekStart()));
 
-  readonly todayIso = today();
+  isToday(date: IsoDate): boolean {
+    return date === today();
+  }
+
+  isBookable(date: IsoDate): boolean {
+    return date >= today();
+  }
 
   /**
    * Every occurrence grouped by the cell it belongs to, keyed by room and day. Built

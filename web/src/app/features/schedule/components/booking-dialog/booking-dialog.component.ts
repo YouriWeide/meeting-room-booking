@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -20,17 +20,16 @@ export class BookingDialogComponent {
 
   readonly bookedBy = signal('');
 
-  readonly defaultRoomId = signal<number | null>(null);
-
-  readonly defaultDate = signal<IsoDate | null>(null);
-
   readonly busy = signal(false);
 
   readonly conflicts = signal<readonly Conflict[]>([]);
 
   readonly errorMessage = signal<string | null>(null);
 
-  readonly minDate = today();
+  /** Read on each render rather than captured once, so it is still right at midnight. */
+  get minDate(): IsoDate {
+    return today();
+  }
 
   readonly submitted = output<CreateReservationRequest>();
 
@@ -48,11 +47,26 @@ export class BookingDialogComponent {
 
   readonly canSubmit = computed(() => !this.busy() && this.conflicts().length === 0);
 
+  /**
+   * The form's value as a signal. A FormGroup is not reactive on its own, so anything
+   * derived from it has to be fed by valueChanges or it silently goes stale.
+   */
+  private readonly formValue = signal(this.form.getRawValue());
+
+  readonly invalidTimes = computed(() => {
+    const { startTime, endTime } = this.formValue();
+    return startTime !== '' && endTime !== '' && endTime <= startTime;
+  });
+
+  private readonly requestedSlots = signal(1);
+
   constructor(private readonly modal: NgbActiveModal) {
-    // A conflict describes one specific request. The moment any field changes it is
-    // about something the user is no longer asking for, so it goes - which also
-    // re-enables Reserveren for the new values.
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.formValue.set(this.form.getRawValue());
+
+      // A conflict describes one specific request. The moment any field changes it is
+      // about something the user is no longer asking for, so it goes - which also
+      // re-enables Reserveren for the new values.
       if (this.conflicts().length > 0) {
         this.conflicts.set([]);
       }
@@ -61,28 +75,27 @@ export class BookingDialogComponent {
         this.errorMessage.set(null);
       }
     });
-
-    // Pre-fill from the cell that was clicked, once the inputs are available.
-    effect(() => {
-      const roomId = this.defaultRoomId() ?? this.rooms()[0]?.id ?? null;
-      this.form.controls.roomId.setValue(roomId, { emitEvent: false });
-    });
-
-    effect(() => {
-      const date = this.defaultDate();
-
-      if (date) {
-        this.form.controls.date.setValue(date, { emitEvent: false });
-      }
-    });
   }
 
-  get invalidTimes(): boolean {
-    const { startTime, endTime } = this.form.getRawValue();
-    return startTime !== '' && endTime !== '' && endTime <= startTime;
-  }
+  /**
+   * Called once by the container straight after opening. Setting the starting values
+   * here rather than in an effect means they are written exactly once, instead of every
+   * time one of the inputs happens to change.
+   */
+  prefill(options: {
+    rooms: readonly Room[];
+    bookedBy: string;
+    roomId: number | null;
+    date: IsoDate;
+  }): void {
+    this.rooms.set(options.rooms);
+    this.bookedBy.set(options.bookedBy);
 
-  private readonly requestedSlots = signal(1);
+    this.form.patchValue({
+      roomId: options.roomId ?? options.rooms[0]?.id ?? null,
+      date: options.date,
+    });
+  }
 
   /** How many slots would still be booked if the clashing ones are skipped. */
   readonly remainingAfterSkip = computed(() => this.requestedSlots() - this.conflicts().length);
@@ -106,7 +119,7 @@ export class BookingDialogComponent {
   });
 
   submit(skipConflicts = false): void {
-    if (this.form.invalid || this.invalidTimes) {
+    if (this.form.invalid || this.invalidTimes()) {
       this.form.markAllAsTouched();
       return;
     }
