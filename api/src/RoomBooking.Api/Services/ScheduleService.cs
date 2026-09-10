@@ -1,3 +1,4 @@
+using RoomBooking.Api.Domain.Entities;
 using RoomBooking.Api.Dtos;
 using RoomBooking.Api.Infrastructure.Repositories;
 
@@ -25,7 +26,7 @@ public class ScheduleService(IReservationRepository reservations) : IScheduleSer
     }
 
     private static IEnumerable<OccurrenceDto> Visible(
-        Domain.Entities.Reservation reservation,
+        Reservation reservation,
         DateOnly rangeStart,
         DateOnly rangeEnd)
     {
@@ -38,7 +39,6 @@ public class ScheduleService(IReservationRepository reservations) : IScheduleSer
         // the week being viewed. Without this filter the grid would show the other nine.
         return all
             .Where(o => o.Date >= rangeStart && o.Date <= rangeEnd)
-            .Select(o => new OccurrenceDto(
-                o.ReservationId, o.RoomId, o.Date, o.Start, o.End, o.BookedBy, all.Count));
+            .Select(o => o.ToDto(all.Count));
     }
 }

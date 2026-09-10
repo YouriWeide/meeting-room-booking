@@ -18,7 +18,6 @@ public class ReservationRepository(BookingDbContext context) : IReservationRepos
         DateOnly rangeStart,
         DateOnly rangeEnd,
         int? roomId = null,
-        int? excludeReservationId = null,
         CancellationToken cancellationToken = default)
     {
         var query = context.Reservations
@@ -30,11 +29,6 @@ public class ReservationRepository(BookingDbContext context) : IReservationRepos
         if (roomId is not null)
         {
             query = query.Where(r => r.RoomId == roomId);
-        }
-
-        if (excludeReservationId is not null)
-        {
-            query = query.Where(r => r.Id != excludeReservationId);
         }
 
         return await query.AsNoTracking().ToListAsync(cancellationToken);

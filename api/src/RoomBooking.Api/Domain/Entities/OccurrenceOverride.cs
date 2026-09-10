@@ -1,14 +1,12 @@
 namespace RoomBooking.Api.Domain.Entities;
 
 /// <summary>
-/// A single occurrence that deviates from the series it belongs to.
+/// One occurrence of a series that does not happen.
 /// </summary>
 /// <remarks>
-/// <para>
-/// This is how one instance can be cancelled or moved without touching the rest of the
-/// series: the reservation row stays exactly as it was, and expansion consults these
-/// rows as it walks the generated dates.
-/// </para>
+/// This is how a single occurrence can be cancelled without touching the rest: the
+/// reservation row stays exactly as it was, and expansion consults these rows as it
+/// walks the generated dates.
 /// </remarks>
 public class OccurrenceOverride
 {
@@ -21,10 +19,4 @@ public class OccurrenceOverride
     public DateOnly OccurrenceDate { get; set; }
 
     public OverrideKind Kind { get; set; }
-
-    /// <summary>Set only when <see cref="Kind"/> is <see cref="OverrideKind.Moved"/>.</summary>
-    public TimeOnly? OverrideStartTime { get; set; }
-
-    /// <summary>Set only when <see cref="Kind"/> is <see cref="OverrideKind.Moved"/>.</summary>
-    public TimeOnly? OverrideEndTime { get; set; }
 }

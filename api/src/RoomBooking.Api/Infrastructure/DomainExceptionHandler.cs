@@ -59,8 +59,8 @@ public sealed class DomainExceptionHandler : IExceptionHandler
     {
         var problem = Simple(
             StatusCodes.Status409Conflict,
-            $"{exception.Conflicts.Count} of the requested slots are taken. "
-            + "Send skipConflicts=true to book the remaining weeks, or choose another time.");
+            $"{exception.Conflicts.Count} of the requested slots are already taken. "
+            + "If any remain free, send skipConflicts=true to book those.");
 
         problem.Title = "The room is already booked for part of this request.";
 

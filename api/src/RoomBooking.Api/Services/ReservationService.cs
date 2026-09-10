@@ -42,14 +42,12 @@ public class ReservationService(IReservationRepository reservations, IRoomReposi
         var conflicts = await FindConflictsAsync(reservation, rule, cancellationToken);
         var wanted = reservation.Expand().ToList();
 
-        if (conflicts.Count > 0 && !request.SkipConflicts)
-        {
-            throw new ConflictException(conflicts);
-        }
+        // Refused for either of two reasons: the caller did not ask to skip clashes, or
+        // skipping them would leave nothing at all to book. An empty reservation is not
+        // a success worth returning.
+        var nothingWouldRemain = conflicts.Count == wanted.Count;
 
-        // Skipping every week would create a reservation that books nothing. Refusing is
-        // more honest than returning an empty success the user has to interpret.
-        if (conflicts.Count == wanted.Count)
+        if (conflicts.Count > 0 && (!request.SkipConflicts || nothingWouldRemain))
         {
             throw new ConflictException(conflicts);
         }
@@ -144,11 +142,7 @@ public class ReservationService(IReservationRepository reservations, IRoomReposi
     private static ReservationDto ToDto(Reservation reservation)
     {
         var expanded = reservation.Expand().ToList();
-        IReadOnlyList<OccurrenceDto> occurrences =
-        [
-            .. expanded.Select(o => new OccurrenceDto(
-                o.ReservationId, o.RoomId, o.Date, o.Start, o.End, o.BookedBy, expanded.Count)),
-        ];
+        IReadOnlyList<OccurrenceDto> occurrences = [.. expanded.Select(o => o.ToDto(expanded.Count))];
 
         return new ReservationDto(
             reservation.Id,

@@ -11,8 +11,6 @@ public class Reservation
 
     public int RoomId { get; set; }
 
-    public Room Room { get; set; } = null!;
-
     public required string BookedBy { get; set; }
 
     public DateOnly FirstDate { get; private set; }
@@ -72,28 +70,18 @@ public class Reservation
     /// <summary>
     /// Cancels one occurrence, leaving the rest of the series exactly as it was.
     /// </summary>
-    /// <remarks>
-    /// If the occurrence had been moved, the move is replaced rather than kept beside a
-    /// cancellation: one date carries at most one override, which the unique index on
-    /// (ReservationId, OccurrenceDate) enforces.
-    /// </remarks>
     public void CancelOccurrence(DateOnly date)
     {
-        var existing = Overrides.FirstOrDefault(o => o.OccurrenceDate == date);
-
-        if (existing is null)
+        if (Overrides.Any(o => o.OccurrenceDate == date))
         {
-            Overrides.Add(new OccurrenceOverride
-            {
-                OccurrenceDate = date,
-                Kind = OverrideKind.Cancelled,
-            });
             return;
         }
 
-        existing.Kind = OverrideKind.Cancelled;
-        existing.OverrideStartTime = null;
-        existing.OverrideEndTime = null;
+        Overrides.Add(new OccurrenceOverride
+        {
+            OccurrenceDate = date,
+            Kind = OverrideKind.Cancelled,
+        });
     }
 
     /// <summary>
@@ -118,35 +106,13 @@ public class Reservation
             yield break;
         }
 
-        var overridesByDate = Overrides.ToDictionary(o => o.OccurrenceDate);
+        var overriddenDates = Overrides.Select(o => o.OccurrenceDate).ToHashSet();
 
         foreach (var date in Recurrence.Dates())
         {
-            if (!overridesByDate.TryGetValue(date, out var occurrenceOverride))
+            if (!overriddenDates.Contains(date))
             {
                 yield return new Occurrence(Id, RoomId, date, StartTime, EndTime, BookedBy);
-                continue;
-            }
-
-            switch (occurrenceOverride.Kind)
-            {
-                case OverrideKind.Cancelled:
-                case OverrideKind.Skipped:
-                    continue;
-
-                case OverrideKind.Moved:
-                    // A Moved override without times would silently fall back to the
-                    // series time, which is exactly the bug it is meant to record.
-                    yield return new Occurrence(
-                        Id,
-                        RoomId,
-                        date,
-                        occurrenceOverride.OverrideStartTime ?? throw new InvalidOperationException(
-                            $"Moved override {occurrenceOverride.Id} has no start time."),
-                        occurrenceOverride.OverrideEndTime ?? throw new InvalidOperationException(
-                            $"Moved override {occurrenceOverride.Id} has no end time."),
-                        BookedBy);
-                    break;
             }
         }
     }

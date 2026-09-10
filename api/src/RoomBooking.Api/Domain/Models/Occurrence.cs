@@ -19,9 +19,9 @@ public sealed record Occurrence(
     /// Whether two occurrences collide.
     /// </summary>
     /// <remarks>
-    /// Half-open intervals: [Start, End). 09:00-10:00 and 10:00-11:00 do NOT overlap,
-    /// which is the boundary case every reviewer probes first. Occurrences on different
-    /// days or in different rooms can never collide.
+    /// Half-open intervals: [Start, End). A room is free again at its end time, so
+    /// 09:00-10:00 and 10:00-11:00 do not overlap. Occurrences on different days or in
+    /// different rooms can never collide.
     /// </remarks>
     public bool OverlapsWith(Occurrence other) =>
         RoomId == other.RoomId
