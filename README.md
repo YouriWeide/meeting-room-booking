@@ -14,7 +14,7 @@ npm run web            # app op http://localhost:4200
 ```
 
 Ga daarna naar http://localhost:4200 en vul een naam in. Je hebt de .NET SDK 8.0.400 of
-nieuwer nodig en Node 20.19+ of 22.12+.
+nieuwer nodig en Node 20.19+, 22.12+ of 24+.
 
 De database is één bestand (`api/src/RoomBooking.Api/roombooking.db`) dat bij de eerste
 start wordt aangemaakt en gevuld met vier ruimtes. Weggooien en opnieuw starten geeft je
