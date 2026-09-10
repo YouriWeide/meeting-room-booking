@@ -1,0 +1,109 @@
+<div class="modal-header">
+  <h2 class="modal-title h5">Ruimte reserveren</h2>
+  <button type="button" class="btn-close" aria-label="Sluiten" (click)="dismiss()"></button>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-body">
+    @if (errorMessage()) {
+      <div class="alert alert-danger" role="alert">{{ errorMessage() }}</div>
+    }
+
+    @if (conflicts().length) {
+      <div class="alert alert-warning" role="alert">
+        <p class="fw-semibold mb-2">
+          {{ conflicts().length }} van de gevraagde weken {{ conflicts().length === 1 ? 'is' : 'zijn' }} al bezet.
+        </p>
+        <ul class="mb-2 ps-3">
+          @for (conflict of conflicts(); track conflict.date) {
+            <li>
+              {{ formatDayLabel(conflict.date) }} —
+              {{ shortTime(conflict.conflictsWith.start) }}–{{ shortTime(conflict.conflictsWith.end) }}
+              door {{ conflict.conflictsWith.bookedBy }}
+            </li>
+          }
+        </ul>
+        @if (remainingAfterSkip() > 0) {
+          <button
+            type="button"
+            class="btn btn-warning btn-sm"
+            [disabled]="busy()"
+            (click)="submit(true)"
+          >
+            Boek de overige {{ remainingAfterSkip() }}
+            {{ remainingAfterSkip() === 1 ? 'week' : 'weken' }}
+          </button>
+        } @else {
+          <span class="small">Kies een ander tijdstip.</span>
+        }
+      </div>
+    }
+
+    <div class="mb-3">
+      <label for="roomId" class="form-label">Ruimte</label>
+      <select id="roomId" class="form-select" formControlName="roomId">
+        @for (room of rooms(); track room.id) {
+          <option [ngValue]="room.id">{{ room.name }} ({{ room.capacity }} personen)</option>
+        }
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="date" class="form-label">Datum</label>
+      <input id="date" type="date" class="form-control" [min]="minDate" formControlName="date" />
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col">
+        <label for="startTime" class="form-label">Van</label>
+        <input
+          id="startTime"
+          type="time"
+          class="form-control"
+          [class.is-invalid]="invalidTimes"
+          formControlName="startTime"
+        />
+      </div>
+      <div class="col">
+        <label for="endTime" class="form-label">Tot</label>
+        <input
+          id="endTime"
+          type="time"
+          class="form-control"
+          [class.is-invalid]="invalidTimes"
+          formControlName="endTime"
+        />
+        @if (invalidTimes) {
+          <div class="invalid-feedback">De eindtijd moet na de starttijd liggen.</div>
+        }
+      </div>
+    </div>
+
+    <div class="form-check mb-2">
+      <input
+        id="repeatWeekly"
+        type="checkbox"
+        class="form-check-input"
+        formControlName="repeatWeekly"
+      />
+      <label for="repeatWeekly" class="form-check-label">Elke week op dit tijdstip</label>
+    </div>
+
+    @if (form.controls.repeatWeekly.value) {
+      <div class="mb-1">
+        <label for="weeks" class="form-label">Aantal weken</label>
+        <input id="weeks" type="number" class="form-control" min="2" max="52" formControlName="weeks" />
+      </div>
+    }
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Annuleren</button>
+    <button type="submit" class="btn btn-primary" [disabled]="busy()">
+      @if (busy()) {
+        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+      }
+      Reserveren
+    </button>
+  </div>
+</form>

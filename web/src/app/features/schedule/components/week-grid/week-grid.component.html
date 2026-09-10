@@ -1,0 +1,58 @@
+<div class="table-responsive">
+  <table class="table table-bordered align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" class="text-nowrap">Ruimte</th>
+        @for (day of days(); track day) {
+          <th scope="col" class="text-nowrap" [class.table-primary]="day === todayIso">
+            {{ formatDayLabel(day) }}
+          </th>
+        }
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (room of rooms(); track room.id) {
+        <tr>
+          <th scope="row" class="text-nowrap">
+            {{ room.name }}
+            <span class="d-block fw-normal text-body-secondary small">
+              {{ room.capacity }} personen
+            </span>
+          </th>
+
+          @for (day of days(); track day) {
+            <td class="p-1" style="min-width: 9rem">
+              @for (occurrence of cell(room.id, day); track occurrence.reservationId + occurrence.date) {
+                <div
+                  class="border rounded px-2 py-1 mb-1 small"
+                  [class.border-primary]="isMine(occurrence)"
+                  [class.bg-primary-subtle]="isMine(occurrence)"
+                >
+                  <span class="fw-semibold">
+                    {{ shortTime(occurrence.start) }}–{{ shortTime(occurrence.end) }}
+                  </span>
+                  <span class="d-block text-truncate">{{ occurrence.bookedBy }}</span>
+                  @if (occurrence.seriesOccurrences > 1) {
+                    <span class="badge text-bg-secondary">wekelijks</span>
+                  }
+                </div>
+              }
+
+              @if (day >= todayIso) {
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary w-100"
+                  [attr.aria-label]="'Reserveer ' + room.name + ' op ' + formatDayLabel(day)"
+                  (click)="slotSelected.emit({ roomId: room.id, date: day })"
+                >
+                  +
+                </button>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

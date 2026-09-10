@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 
-import { AppHeader } from './shared/app-header/app-header';
+import { AppHeaderComponent } from './shared/app-header/app-header.component';
 import { CurrentUserService } from './shared/current-user';
 
 /**
@@ -9,11 +9,11 @@ import { CurrentUserService } from './shared/current-user';
  */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AppHeader],
-  templateUrl: './app.html',
+  imports: [RouterOutlet, AppHeaderComponent],
+  templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {
+export class AppComponent {
   private readonly currentUser = inject(CurrentUserService);
   private readonly router = inject(Router);
 

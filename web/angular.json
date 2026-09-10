@@ -11,7 +11,8 @@
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss",
-          "skipTests": true
+          "skipTests": true,
+          "type": "component"
         },
         "@schematics/angular:class": {
           "skipTests": true

@@ -6,10 +6,10 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 @Component({
   selector: 'app-header',
   imports: [],
-  templateUrl: './app-header.html',
+  templateUrl: './app-header.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppHeader {
+export class AppHeaderComponent {
   readonly userName = input.required<string>();
 
   readonly switchUser = output<void>();

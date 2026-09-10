@@ -10,10 +10,10 @@ import { CurrentUserService } from '../../shared/current-user';
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule],
-  templateUrl: './login.html',
+  templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginPage {
+export class LoginComponent {
   private readonly currentUser = inject(CurrentUserService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
