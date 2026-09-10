@@ -1,6 +1,3 @@
-// Bootstrap, matching Rocksoft.Portal's choice of ng-bootstrap over a component library
-// with its own design language. Imported as Sass rather than as a prebuilt stylesheet so
-// the theme can be adjusted through variables if it ever needs to be.
 @use 'bootstrap/scss/bootstrap' as *;
 
 html,

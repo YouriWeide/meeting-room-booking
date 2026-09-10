@@ -29,9 +29,20 @@
                   [class.border-primary]="isMine(occurrence)"
                   [class.bg-primary-subtle]="isMine(occurrence)"
                 >
-                  <span class="fw-semibold">
-                    {{ shortTime(occurrence.start) }}–{{ shortTime(occurrence.end) }}
-                  </span>
+                  <div class="d-flex align-items-start gap-1">
+                    <span class="fw-semibold flex-grow-1">
+                      {{ shortTime(occurrence.start) }}–{{ shortTime(occurrence.end) }}
+                    </span>
+                    @if (isMine(occurrence)) {
+                      <button
+                        type="button"
+                        class="btn-close btn-close-sm"
+                        style="font-size: 0.6rem"
+                        [attr.aria-label]="'Annuleer reservering van ' + shortTime(occurrence.start)"
+                        (click)="cancelRequested.emit(occurrence)"
+                      ></button>
+                    }
+                  </div>
                   <span class="d-block text-truncate">{{ occurrence.bookedBy }}</span>
                   @if (occurrence.seriesOccurrences > 1) {
                     <span class="badge text-bg-secondary">wekelijks</span>

@@ -1,0 +1,40 @@
+@if (occurrence(); as booking) {
+  <div class="modal-header">
+    <h2 class="modal-title h5">Reservering annuleren</h2>
+    <button type="button" class="btn-close" aria-label="Sluiten" (click)="dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <p class="mb-2">
+      <strong>{{ roomName() }}</strong> —
+      {{ formatDayLabel(booking.date) }},
+      {{ shortTime(booking.start) }}–{{ shortTime(booking.end) }}
+    </p>
+
+    @if (booking.seriesOccurrences > 1) {
+      <p class="text-body-secondary mb-0">
+        Deze reservering hoort bij een wekelijkse reeks van
+        {{ booking.seriesOccurrences }} keer. Wat wil je annuleren?
+      </p>
+    } @else {
+      <p class="text-body-secondary mb-0">Weet je zeker dat je deze reservering wilt annuleren?</p>
+    }
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Terug</button>
+
+    @if (booking.seriesOccurrences > 1) {
+      <button type="button" class="btn btn-outline-danger" (click)="confirm('occurrence')">
+        Alleen deze keer
+      </button>
+      <button type="button" class="btn btn-danger" (click)="confirm('series')">
+        Hele reeks ({{ booking.seriesOccurrences }})
+      </button>
+    } @else {
+      <button type="button" class="btn btn-danger" (click)="confirm('occurrence')">
+        Annuleren
+      </button>
+    }
+  </div>
+}

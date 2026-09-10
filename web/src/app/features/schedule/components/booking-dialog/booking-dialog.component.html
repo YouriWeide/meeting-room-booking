@@ -12,12 +12,12 @@
     @if (conflicts().length) {
       <div class="alert alert-warning" role="alert">
         <p class="fw-semibold mb-2">
-          {{ conflicts().length }} van de gevraagde weken {{ conflicts().length === 1 ? 'is' : 'zijn' }} al bezet.
+          {{ conflictSummary() }}
         </p>
         <ul class="mb-2 ps-3">
           @for (conflict of conflicts(); track conflict.date) {
             <li>
-              {{ formatDayLabel(conflict.date) }} —
+              {{ formatDayLabel(conflict.date) }}
               {{ shortTime(conflict.conflictsWith.start) }}–{{ shortTime(conflict.conflictsWith.end) }}
               door {{ conflict.conflictsWith.bookedBy }}
             </li>
@@ -99,7 +99,7 @@
 
   <div class="modal-footer">
     <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Annuleren</button>
-    <button type="submit" class="btn btn-primary" [disabled]="busy()">
+    <button type="submit" class="btn btn-primary" [disabled]="!canSubmit()">
       @if (busy()) {
         <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
       }

@@ -32,6 +32,7 @@
       [weekStart]="weekStart()"
       [currentUserName]="userName() ?? ''"
       (slotSelected)="openBooking($event)"
+      (cancelRequested)="cancelBooking($event)"
     />
   }
 </div>

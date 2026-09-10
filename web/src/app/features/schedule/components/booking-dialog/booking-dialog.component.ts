@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, output, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -7,9 +8,6 @@ import type { Conflict, CreateReservationRequest, IsoDate, Room } from '../../mo
 
 /**
  * Books a room for a slot, once or every week for a number of weeks.
- *
- * Presentational. It collects the form and reports it; the container performs the
- * request and feeds the outcome back through `busy`, `conflicts` and `errorMessage`.
  */
 @Component({
   selector: 'app-booking-dialog',
@@ -42,13 +40,28 @@ export class BookingDialogComponent {
     startTime: new FormControl('09:00', { nonNullable: true, validators: [Validators.required] }),
     endTime: new FormControl('10:00', { nonNullable: true, validators: [Validators.required] }),
     repeatWeekly: new FormControl(false, { nonNullable: true }),
-    weeks: new FormControl(10, {
+    weeks: new FormControl(2, {
       nonNullable: true,
       validators: [Validators.required, Validators.min(2), Validators.max(52)],
     }),
   });
 
+  readonly canSubmit = computed(() => !this.busy() && this.conflicts().length === 0);
+
   constructor(private readonly modal: NgbActiveModal) {
+    // A conflict describes one specific request. The moment any field changes it is
+    // about something the user is no longer asking for, so it goes - which also
+    // re-enables Reserveren for the new values.
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      if (this.conflicts().length > 0) {
+        this.conflicts.set([]);
+      }
+
+      if (this.errorMessage() !== null) {
+        this.errorMessage.set(null);
+      }
+    });
+
     // Pre-fill from the cell that was clicked, once the inputs are available.
     effect(() => {
       const roomId = this.defaultRoomId() ?? this.rooms()[0]?.id ?? null;
@@ -69,10 +82,27 @@ export class BookingDialogComponent {
     return startTime !== '' && endTime !== '' && endTime <= startTime;
   }
 
-  /** How many weeks would still be booked if the clashing ones are skipped. */
-  readonly remainingAfterSkip = computed(() => {
-    const requested = this.form.getRawValue().repeatWeekly ? this.form.getRawValue().weeks : 1;
-    return requested - this.conflicts().length;
+  private readonly requestedSlots = signal(1);
+
+  /** How many slots would still be booked if the clashing ones are skipped. */
+  readonly remainingAfterSkip = computed(() => this.requestedSlots() - this.conflicts().length);
+
+  /**
+   * Reads correctly whether one slot was asked for or multiple.
+   */
+  readonly conflictSummary = computed(() => {
+    const taken = this.conflicts().length;
+    const requested = this.requestedSlots();
+
+    if (requested === 1) {
+      return 'Dit tijdslot is al bezet.';
+    }
+
+    if (taken >= requested) {
+      return `Alle ${requested} gevraagde tijdsloten zijn al bezet.`;
+    }
+
+    return `${taken} van de ${requested} gevraagde tijdsloten ${taken === 1 ? 'is' : 'zijn'} al bezet.`;
   });
 
   submit(skipConflicts = false): void {
@@ -82,6 +112,7 @@ export class BookingDialogComponent {
     }
 
     const value = this.form.getRawValue();
+    this.requestedSlots.set(value.repeatWeekly ? value.weeks : 1);
 
     this.submitted.emit({
       roomId: value.roomId!,

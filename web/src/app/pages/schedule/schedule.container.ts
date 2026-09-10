@@ -10,6 +10,10 @@ import {
   today,
 } from '../../features/schedule/date-utils';
 import { BookingDialogComponent } from '../../features/schedule/components/booking-dialog/booking-dialog.component';
+import {
+  CancelDialogComponent,
+  type CancelScope,
+} from '../../features/schedule/components/cancel-dialog/cancel-dialog.component';
 import { WeekGridComponent, type SlotSelection } from '../../features/schedule/components/week-grid/week-grid.component';
 import type {
   Conflict,
@@ -107,6 +111,42 @@ export class ScheduleContainerComponent {
         form.errorMessage.set(describe(error));
       },
     });
+  }
+
+  /**
+   * Cancel one occurrence or the whole series. Which of the two is the user's choice,
+   * so the dialog asks and this decides nothing on their behalf.
+   */
+  cancelBooking(occurrence: Occurrence): void {
+    const dialog = this.modal.open(CancelDialogComponent);
+    const confirmation = dialog.componentInstance as CancelDialogComponent;
+
+    confirmation.occurrence.set(occurrence);
+    confirmation.roomName.set(this.roomName(occurrence.roomId));
+
+    // The promise rejects when the dialog is dismissed.
+    dialog.result.then(
+      (scope: CancelScope) => this.performCancel(occurrence, scope),
+      () => undefined,
+    );
+  }
+
+  private performCancel(occurrence: Occurrence, scope: CancelScope): void {
+    const bookedBy = this.userName() ?? '';
+
+    const request =
+      scope === 'series'
+        ? this.api.cancelSeries(occurrence.reservationId, bookedBy)
+        : this.api.cancelOccurrence(occurrence.reservationId, occurrence.date, bookedBy);
+
+    request.subscribe({
+      next: () => this.load(),
+      error: (error: unknown) => this.loadError.set(describe(error)),
+    });
+  }
+
+  private roomName(roomId: number): string {
+    return this.rooms().find((room) => room.id === roomId)?.name ?? '';
   }
 
   private load(): void {

@@ -11,9 +11,6 @@ export interface SlotSelection {
 
 /**
  * Shows, per room, the reservations of the chosen week.
- *
- * Presentational — it is handed rooms and occurrences and reports clicks. It fetches
- * nothing, so the container decides what a week is and where the data comes from.
  */
 @Component({
   selector: 'app-week-grid',
@@ -31,6 +28,8 @@ export class WeekGridComponent {
   readonly currentUserName = input.required<string>();
 
   readonly slotSelected = output<SlotSelection>();
+
+  readonly cancelRequested = output<Occurrence>();
 
   readonly days = computed(() => weekDays(this.weekStart()));
 
